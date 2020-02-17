@@ -271,26 +271,37 @@ void isr(char c){
 volatile struct smart_array{
 	char data[BUFFER_SIZE];
 	size_t buffer_start;
-	size_t available;
-} buffer;
+	size_t buffer_end;
+} buffer{0, 0, 0};
 
 int main(){
 	enableISR();
 	
-	if (buffer.available) {
-		char data = buffer.data[buffer.buffer_start];
-		buffer.available--;
+	size_t start = buffer.buffer_start;
+	if (start != buffer.buffer_end) {
+		char data = buffer.data[start];
+		
+		//got the data, now increment the index
+		start++;
+		if (start >= BUFFER_SIZE){
+			start -= BUFFER_SIZE
+		}
+		buffer.buffer_start = start;
 
 		//use data
 	}
 }
 
 void isr(char c){
-	if (buffer.available >= BUFFER_SIZE){
+	size_t next_end = buffer.buffer_end++;
+	if (next_end >= BUFFER_SIZE){
+		next_end -= BUFFER_SIZE;
+	}
+	if (buffer.buffer_start == next_end){
 		// error buffer full
 		return;
 	}
-	size_t index = buffer.buffer_start + buffer.available;
-	buffer.data[buffer.buffer_start + buffer.available] = c;
 	
+	buffer.data[buffer.buffer_end] = c;
+	buffer.buffer_end = next_end;
 }
